@@ -1,0 +1,32 @@
+{
+  "name": "spellint",
+  "version": "1.0.0",
+  "description": "A CLI tool to check spelling and Markdown formatting in .md files",
+  "main": "index.js",
+  "bin": {
+    "spellint": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Tests not yet implemented.\" && exit 1"
+  },
+  "keywords": ["spellcheck", "markdown", "lint", "cli", "open-source"],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^9.4.1",
+    "dictionary-en": "^3.1.0",
+    "nspell": "^2.1.5",
+    "remark": "^14.0.2",
+    "remark-lint": "^9.1.1",
+    "unified": "^10.1.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aryan-MP/spellint.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Aryan-MP/spellint/issues"
+  },
+  "homepage": "https://github.com/Aryan-MP/spellint#readme"
+}
