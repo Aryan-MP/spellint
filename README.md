@@ -74,6 +74,7 @@ Spellint uses default English spelling and a base set of Markdown linting rules.
 - `.spellintrc` configuration file
 - Custom dictionaries for technical terms (e.g., GitHub, Kubernetes)
 - Toggle rules for formatting (headings, lists, spacing, etc.)
+- Checking indentations and fomating in inline codes.
 
 Advanced users can also modify `lib/lint.js` to tweak rules directly.
 
