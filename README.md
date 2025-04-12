@@ -1,3 +1,4 @@
+
 # Spellint
 
 **Spellint** is a sleek, fast, and developer-friendly command-line tool that checks spelling and Markdown formatting in `.md` files. Whether you're a developer writing documentation, a technical writer polishing content, or a contributor reviewing PRs, Spellint ensures your Markdown is clean and typo-free — all with minimal setup.
@@ -27,7 +28,7 @@ npm install -g spellint
 Or set it up locally:
 
 ```bash
-git clone https://github.com/yourusername/spellint.git
+git clone https://github.com/Aryan-MP/spellint.git
 cd spellint
 npm install
 npm link
@@ -64,6 +65,13 @@ docs/guide.md:
   Line 10, Col 2: Formatting error: Invalid heading level (use #, ##, etc.)
 ```
 
+### Linting Errors and Spell Check Separation
+
+To improve readability, **Spellint** separates the linting errors and spelling mistakes clearly, so you can easily locate and fix issues:
+
+- **Linting Errors**: Are shown with their rule codes (e.g., MD022) and descriptions (e.g., "Headings should be surrounded by blank lines").
+- **Spelling Errors**: Display the word with its suggested corrections.
+
 ---
 
 ## ⚙️ Configuration
@@ -74,7 +82,7 @@ Spellint uses default English spelling and a base set of Markdown linting rules.
 - `.spellintrc` configuration file
 - Custom dictionaries for technical terms (e.g., GitHub, Kubernetes)
 - Toggle rules for formatting (headings, lists, spacing, etc.)
-- Checking indentations and fomating in inline codes.
+- Checking indentations and formatting in inline codes.
 
 Advanced users can also modify `lib/lint.js` to tweak rules directly.
 
@@ -142,4 +150,3 @@ Have suggestions or feedback? Feel free to:
 - Star the repo if you find it helpful!
 
 Happy documenting — and may your Markdown stay lint-free! ✨
-
