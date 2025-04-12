@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const { program } = require('commander');
+const globby = require('globby');
+const chalk = require('chalk');
 const fs = require('fs').promises;
 const path = require('path');
 const { checkSpelling } = require('./lib/spellcheck');
@@ -14,75 +16,95 @@ const { lintMarkdown } = require('./lib/lint');
 async function processFile(filePath) {
   try {
     const content = await fs.readFile(filePath, 'utf8');
-    const spellingErrors = await checkSpelling(content);
-    const lintErrors = await lintMarkdown(content);
+    const [spellingErrors, lintErrors] = await Promise.all([
+      checkSpelling(content),
+      lintMarkdown(content),
+    ]);
 
-    const allErrors = [...spellingErrors, ...lintErrors].sort(
-      (a, b) => a.line - b.line || a.column - b.column
-    );
+    if (spellingErrors.length === 0 && lintErrors.length === 0) {
+      return true;
+    }
 
-    if (allErrors.length > 0) {
-      console.log(`\n${filePath}:`);
-      allErrors.forEach((err) => {
-        console.log(`  Line ${err.line}, Col ${err.column}: ${err.message}`);
+    console.log(chalk.yellowBright(`\n📄 ${filePath}`));
+
+    if (lintErrors.length > 0) {
+      console.log(chalk.cyanBright('\n⚠️  Linting Issues:\n'));
+      lintErrors.forEach((err) => {
+        const ruleCode = err.ruleId ? chalk.green(`[${err.ruleId}]`) : '';
+        console.log(
+          chalk.red(`  Line ${err.line}, Col ${err.column}: ${ruleCode} ${err.message}`)
+        );
+      });
+    }
+
+    if (spellingErrors.length > 0) {
+      console.log(chalk.magentaBright('\n📝 Spelling Mistakes:\n'));
+      spellingErrors.forEach((err) => {
+        console.log(
+          chalk.red(`  Line ${err.line}, Col ${err.column}: ${err.message}`)
+        );
         if (err.suggestions?.length) {
-          console.log(`    Suggestions: ${err.suggestions.join(', ')}`);
+          console.log(
+            chalk.gray(`    Suggestions: ${err.suggestions.join(', ')}`)
+          );
         }
       });
-      return false;
     }
-    return true;
-  } catch (error) {
-    console.error(`Error processing ${filePath}: ${error.message}`);
+
+    return false;
+  } catch (err) {
+    console.error(chalk.red(`Error reading ${filePath}: ${err.message}`));
     return false;
   }
 }
 
 /**
- * Main function to handle CLI execution.
+ * Main CLI execution function.
  */
 async function main() {
   program
     .name('spellint')
-    .description('A tool to check spelling and Markdown formatting in .md files')
-    .argument('[path]', 'File or directory to check', '.')
-    .action(async (inputPath) => {
+    .version('1.0.0', '-v, --version', 'Output the current version')
+    .description('Check spelling and Markdown formatting in .md files')
+    .argument('[input]', 'File or directory to check', '.')
+    .action(async (input) => {
       try {
-        const stats = await fs.stat(inputPath);
-        const files = [];
+        const resolvedPath = path.resolve(input);
+        let files = [];
 
+        // Check if input is a file or directory
+        const stats = await fs.stat(resolvedPath);
         if (stats.isFile()) {
-          if (!inputPath.endsWith('.md')) {
-            console.error('Error: File must be a .md file.');
+          if (resolvedPath.endsWith('.md')) {
+            files = [resolvedPath];
+          } else {
+            console.log(chalk.red('Error: Input file must be a .md file.'));
             process.exit(1);
           }
-          files.push(inputPath);
         } else if (stats.isDirectory()) {
-          const dirFiles = await fs.readdir(inputPath, { recursive: true });
-          files.push(
-            ...dirFiles
-              .filter((file) => file.endsWith('.md'))
-              .map((file) => path.join(inputPath, file))
-          );
+          files = await globby([path.join(resolvedPath, '**', '*.md')], {
+            gitignore: true,
+            absolute: true,
+          });
         } else {
-          console.error('Error: Path must be a file or directory.');
+          console.log(chalk.red('Error: Input must be a file or directory.'));
           process.exit(1);
         }
 
         if (files.length === 0) {
-          console.log('No .md files found.');
-          return;
+          console.log(chalk.green('✅ No Markdown files found to check.'));
+          process.exit(0);
         }
 
         let hasErrors = false;
-        for (const file of files) {
+        await Promise.all(files.map(async (file) => {
           const success = await processFile(file);
           if (!success) hasErrors = true;
-        }
+        }));
 
         process.exit(hasErrors ? 1 : 0);
-      } catch (error) {
-        console.error(`Error: ${error.message}`);
+      } catch (err) {
+        console.error(chalk.red(`Unexpected error: ${err.message}`));
         process.exit(1);
       }
     });
@@ -90,7 +112,4 @@ async function main() {
   await program.parseAsync();
 }
 
-main().catch((error) => {
-  console.error(`Unexpected error: ${error.message}`);
-  process.exit(1);
-});
+main();
